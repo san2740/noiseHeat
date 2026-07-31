@@ -11,16 +11,27 @@ const levelText = document.querySelector("#levelText");
 const meterFill = document.querySelector("#meterFill");
 const status = document.querySelector("#status");
 const confidenceText = document.querySelector("#confidenceText");
+const directionText = document.querySelector("#directionText");
 const errorBox = document.querySelector("#errorBox");
 
 let stream = null;
 let meter = null;
 let estimator = null;
 let estimatorFrameId = 0;
-let latestLevel = 0;
 let facingMode = "environment";
 
+let latestAudio = {
+  level: 0,
+  balance: 0,
+  stereoConfidence: 0,
+  reportedChannelCount: 1
+};
+
 const overlay = new WebGLOverlay(canvas);
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
 
 function setError(message) {
   errorBox.textContent = message;
@@ -32,6 +43,13 @@ function stopEstimator() {
   estimator = null;
 }
 
+function describeDirection(balance, confidence) {
+  if (confidence < 0.18) return "방향 정보 없음";
+  if (balance < -0.14) return "왼쪽 추정";
+  if (balance > 0.14) return "오른쪽 추정";
+  return "정면 추정";
+}
+
 function startEstimator() {
   stopEstimator();
   estimator = new SourceEstimator(video);
@@ -39,17 +57,48 @@ function startEstimator() {
   const tick = now => {
     if (!estimator) return;
 
-    const position = estimator.estimate(latestLevel, now);
-    overlay.setSourcePosition(
-      position.x,
-      position.y,
-      position.confidence
-    );
+    const motion = estimator.estimate(latestAudio.level, now);
+    const stereoUsable = latestAudio.stereoConfidence >= 0.18;
+    const motionUsable = motion.confidence >= 0.18;
+
+    let x = window.innerWidth * 0.5;
+    let y = window.innerHeight * 0.5;
+    let confidence = 0.05;
+    let sourceLabel = "위치 불명";
+
+    if (stereoUsable) {
+      // 좌우 음향 정보는 X축에 반영합니다. 과도한 끝단 이동을 막기 위해 12~88%로 제한합니다.
+      const audioX = window.innerWidth * (0.5 + latestAudio.balance * 0.38);
+      x = clamp(audioX, window.innerWidth * 0.12, window.innerWidth * 0.88);
+
+      // Y축은 음향 2채널만으로 알 수 없으므로 움직임이 있으면 그 값을 사용합니다.
+      y = motionUsable ? motion.y : window.innerHeight * 0.5;
+
+      confidence = clamp(
+        latestAudio.stereoConfidence * 0.72 +
+        (motionUsable ? motion.confidence * 0.28 : 0),
+        0,
+        1
+      );
+      sourceLabel = motionUsable ? "오디오 좌우 + 영상 높이" : "오디오 좌우 추정";
+    } else if (motionUsable) {
+      x = motion.x;
+      y = motion.y;
+      confidence = motion.confidence * 0.72;
+      sourceLabel = "영상 움직임 추정";
+    }
+
+    overlay.setSourcePosition(x, y, confidence);
 
     confidenceText.textContent =
-      position.confidence >= 0.55 ? "위치 추정 높음" :
-      position.confidence >= 0.25 ? "위치 추정 보통" :
-      "위치 추정 낮음";
+      confidence >= 0.55 ? `${sourceLabel} · 신뢰 높음` :
+      confidence >= 0.25 ? `${sourceLabel} · 신뢰 보통` :
+      `${sourceLabel} · 신뢰 낮음`;
+
+    directionText.textContent = describeDirection(
+      latestAudio.balance,
+      latestAudio.stereoConfidence
+    );
 
     estimatorFrameId = requestAnimationFrame(tick);
   };
@@ -65,7 +114,13 @@ async function stopStream() {
 
   stream?.getTracks().forEach(track => track.stop());
   stream = null;
-  latestLevel = 0;
+
+  latestAudio = {
+    level: 0,
+    balance: 0,
+    stereoConfidence: 0,
+    reportedChannelCount: 1
+  };
   overlay.setNoise(0);
 }
 
@@ -87,6 +142,7 @@ async function startMedia() {
       height: { ideal: 720 }
     },
     audio: {
+      channelCount: { ideal: 2 },
       echoCancellation: false,
       noiseSuppression: false,
       autoGainControl: false
@@ -96,11 +152,11 @@ async function startMedia() {
   video.srcObject = stream;
   await video.play();
 
-  meter = new AudioMeter(stream, level => {
-    latestLevel = level;
-    overlay.setNoise(level);
+  meter = new AudioMeter(stream, sample => {
+    latestAudio = sample;
+    overlay.setNoise(sample.level);
 
-    const percent = Math.round(level * 100);
+    const percent = Math.round(sample.level * 100);
     levelText.textContent = `소음 강도 ${percent}%`;
     meterFill.style.width = `${percent}%`;
     status.textContent =
@@ -127,8 +183,7 @@ startButton.addEventListener("click", async () => {
   }
 });
 
-flipButton.addEventListener("click", async event => {
-  event.stopPropagation();
+flipButton.addEventListener("click", async () => {
   facingMode = facingMode === "environment" ? "user" : "environment";
 
   try {
@@ -136,17 +191,6 @@ flipButton.addEventListener("click", async event => {
   } catch (error) {
     setError(`카메라 전환 실패: ${error.message}`);
   }
-});
-
-// 자동 추정이 틀렸을 때 사용자가 화면을 누르면 즉시 해당 위치로 보정할 수 있습니다.
-document.addEventListener("pointerdown", event => {
-  if (!startPanel.classList.contains("started")) return;
-  if (event.target.closest("button, .hud")) return;
-
-  estimator.lastX = event.clientX;
-  estimator.lastY = event.clientY;
-  estimator.confidence = 1;
-  overlay.setSourcePosition(event.clientX, event.clientY, 1);
 });
 
 document.addEventListener("visibilitychange", async () => {

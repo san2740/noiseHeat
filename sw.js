@@ -1,4 +1,4 @@
-const CACHE_NAME = "noise-heat-camera-v4";
+const CACHE_NAME = "noise-heat-camera-v6";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,7 +7,7 @@ const ASSETS = [
   "./src/app.js",
   "./src/audio-meter.js",
   "./src/source-estimator.js",
-  "./src/webgl-overlay.js",
+  "./src/webgl-overlay.js"
 ];
 
 self.addEventListener("install", event => {

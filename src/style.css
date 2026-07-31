@@ -52,7 +52,8 @@ html, body, #app {
 }
 
 #status,
-#confidenceText {
+#confidenceText,
+#directionText {
   opacity: 0.78;
   font-size: 14px;
 }
@@ -75,6 +76,7 @@ html, body, #app {
 
 .hud-footer {
   margin-top: 10px;
+  flex-wrap: wrap;
 }
 
 .hud p {

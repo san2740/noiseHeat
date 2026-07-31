@@ -1,10 +1,10 @@
 {
   "name": "Noise Heat Camera",
   "short_name": "NoiseHeat",
-  "description": "카메라 위에 소음 반응형 WebGL 색상 효과를 표시하는 PWA",
+  "description": "스테레오 좌우 차이와 영상 움직임을 결합해 카메라 위에 소리 히트맵을 표시합니다.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#05070b",
-  "theme_color": "#05070b",
+  "theme_color": "#05070b"
 }

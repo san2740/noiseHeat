@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#05070b" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="manifest" href="./manifest.json?v=4" />
+  <link rel="manifest" href="./manifest.json?v=6" />
   <link rel="stylesheet" href="./src/style.css" />
   <title>Noise Heat Camera</title>
 </head>
@@ -26,14 +26,17 @@
       </div>
       <div class="hud-footer">
         <span id="confidenceText">위치 추정 대기</span>
+        <span id="directionText">방향 정보 없음</span>
         <button id="flipButton" class="secondary compact" type="button" hidden>
           카메라 전환
         </button>
       </div>
+      <p>가능하면 스테레오 좌우 차이와 영상 움직임을 결합합니다. Safari가 모노만 제공하면 영상 추정으로 대체됩니다.</p>
     </section>
 
     <section id="startPanel" class="start-panel">
       <h1>Noise Heat Camera</h1>
+      <p>소리가 커질수록 파랑에서 빨강으로 변하며, 가능한 경우 좌우 오디오 방향과 영상 움직임을 결합합니다.</p>
       <button id="startButton" type="button">카메라와 마이크 시작</button>
       <div id="errorBox" role="alert"></div>
     </section>
