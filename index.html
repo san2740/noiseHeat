@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#05070b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <link rel="stylesheet" href="./src/style.css" />
+  <title>Noise Heat Camera</title>
+</head>
+<body>
+  <main id="app">
+    <video id="camera" autoplay muted playsinline></video>
+    <canvas id="overlay"></canvas>
+
+    <section class="hud">
+      <div class="meter-row">
+        <strong id="levelText">소음 강도 0%</strong>
+        <span id="status">대기 중</span>
+      </div>
+      <div class="meter">
+        <div id="meterFill"></div>
+      </div>
+      <p>실제 dB SPL이 아닌 기기별 상대 음량입니다.</p>
+    </section>
+
+    <section id="startPanel" class="start-panel">
+      <h1>Noise Heat Camera</h1>
+      <p>카메라 위에 소음 반응형 WebGL 색상 효과를 표시합니다.</p>
+      <button id="startButton" type="button">카메라와 마이크 시작</button>
+      <button id="flipButton" class="secondary" type="button" hidden>카메라 전환</button>
+      <div id="errorBox" role="alert"></div>
+    </section>
+  </main>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>

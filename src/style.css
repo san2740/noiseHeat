@@ -1,0 +1,120 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #05070b;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #05070b;
+}
+
+#camera, #overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#camera {
+  object-fit: cover;
+  background: #05070b;
+}
+
+#overlay {
+  pointer-events: none;
+}
+
+.hud {
+  position: fixed;
+  left: max(16px, env(safe-area-inset-left));
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 3;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(12px);
+}
+
+.meter-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#status {
+  opacity: 0.75;
+  font-size: 14px;
+}
+
+.meter {
+  height: 10px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+#meterFill {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1478ff, #ffd22e, #ff2a18);
+  transition: width 70ms linear;
+}
+
+.hud p {
+  margin: 8px 0 0;
+  opacity: 0.7;
+  font-size: 12px;
+}
+
+.start-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-content: center;
+  gap: 14px;
+  padding: 28px;
+  text-align: center;
+  background: radial-gradient(circle at top, #152745, #05070b 60%);
+}
+
+.start-panel.started {
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 250ms ease;
+}
+
+.start-panel h1 { margin: 0; }
+.start-panel p { max-width: 420px; margin: 0 auto; opacity: 0.8; }
+
+button {
+  appearance: none;
+  border: 0;
+  border-radius: 14px;
+  padding: 15px 18px;
+  color: #06101f;
+  background: white;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+button.secondary {
+  color: white;
+  background: rgba(255,255,255,0.15);
+}
+
+#errorBox {
+  min-height: 24px;
+  color: #ffb5ac;
+  font-size: 14px;
+  white-space: pre-line;
+}
