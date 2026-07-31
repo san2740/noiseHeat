@@ -12,7 +12,6 @@ html, body, #app {
   margin: 0;
   overflow: hidden;
   background: #05070b;
-  touch-action: none;
 }
 
 #camera, #overlay {
@@ -31,28 +30,6 @@ html, body, #app {
   pointer-events: none;
 }
 
-.position-guide {
-  position: fixed;
-  top: max(18px, env(safe-area-inset-top));
-  left: 50%;
-  z-index: 4;
-  max-width: calc(100% - 32px);
-  padding: 10px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 999px;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.58);
-  backdrop-filter: blur(12px);
-  font-size: 13px;
-  text-align: center;
-  transition: opacity 180ms ease;
-}
-
-.position-guide.hidden {
-  pointer-events: none;
-  opacity: 0;
-}
-
 .hud {
   position: fixed;
   left: max(16px, env(safe-area-inset-left));
@@ -63,16 +40,20 @@ html, body, #app {
   border-radius: 18px;
   background: rgba(0, 0, 0, 0.48);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-.meter-row {
+.meter-row,
+.hud-footer {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-#status {
-  opacity: 0.75;
+#status,
+#confidenceText {
+  opacity: 0.78;
   font-size: 14px;
 }
 
@@ -88,14 +69,19 @@ html, body, #app {
   width: 0%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #1478ff, #00d26a, #ffd22e, #ff2a18);
+  background: linear-gradient(90deg, #051aff, #00d9ff, #00d933, #fff200, #ff6b00, #ff0000);
   transition: width 70ms linear;
+}
+
+.hud-footer {
+  margin-top: 10px;
 }
 
 .hud p {
   margin: 8px 0 0;
   opacity: 0.7;
   font-size: 12px;
+  line-height: 1.45;
 }
 
 .start-panel {
@@ -117,11 +103,7 @@ html, body, #app {
 }
 
 .start-panel h1 { margin: 0; }
-.start-panel p {
-  max-width: 440px;
-  margin: 0 auto;
-  opacity: 0.8;
-}
+.start-panel p { max-width: 440px; margin: 0 auto; opacity: 0.8; }
 
 button {
   appearance: none;
@@ -141,10 +123,9 @@ button.secondary {
 }
 
 button.compact {
-  width: 100%;
-  margin-top: 10px;
-  padding: 10px 14px;
-  font-size: 14px;
+  padding: 9px 12px;
+  border-radius: 11px;
+  font-size: 13px;
 }
 
 #errorBox {

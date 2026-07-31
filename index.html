@@ -8,7 +8,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <link rel="stylesheet" href="./src/style.css" />
   <title>Noise Heat Camera</title>
 </head>
@@ -17,25 +16,26 @@
     <video id="camera" autoplay muted playsinline></video>
     <canvas id="overlay"></canvas>
 
-    <div id="positionGuide" class="position-guide">
-      화면을 터치하거나 드래그해서 음원 위치를 지정하세요
-    </div>
-
     <section class="hud">
       <div class="meter-row">
         <strong id="levelText">소음 강도 0%</strong>
         <span id="status">대기 중</span>
       </div>
-      <div class="meter"><div id="meterFill"></div></div>
-      <p>표시 위치는 터치로 지정하며, 색상·크기는 마이크 음량에 반응합니다.</p>
-      <button id="flipButton" class="secondary compact" type="button" hidden>
-        카메라 전환
-      </button>
+      <div class="meter">
+        <div id="meterFill"></div>
+      </div>
+      <div class="hud-footer">
+        <span id="confidenceText">위치 추정 대기</span>
+        <button id="flipButton" class="secondary compact" type="button" hidden>
+          카메라 전환
+        </button>
+      </div>
+      <p>영상 움직임과 소리 시점을 결합한 추정 위치이며 실제 음향 측정 좌표는 아닙니다.</p>
     </section>
 
     <section id="startPanel" class="start-panel">
       <h1>Noise Heat Camera</h1>
-      <p>카메라 화면을 터치해 음원 위치를 지정하면 그 위치에 WebGL 히트맵을 표시합니다.</p>
+      <p>소리가 커질수록 파랑에서 빨강으로 변하고, 화면의 움직임 위치를 따라갑니다.</p>
       <button id="startButton" type="button">카메라와 마이크 시작</button>
       <div id="errorBox" role="alert"></div>
     </section>

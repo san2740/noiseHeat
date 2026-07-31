@@ -30,17 +30,14 @@ export class AudioMeter {
   }
 
   tick = () => {
-    if (!this.analyser || !this.buffer) return;
-
     this.analyser.getFloatTimeDomainData(this.buffer);
 
     let sum = 0;
     for (const sample of this.buffer) sum += sample * sample;
-
     const rms = Math.sqrt(sum / this.buffer.length);
     const dbfs = 20 * Math.log10(Math.max(rms, 1e-7));
 
-    // -60 dBFS 이하를 0, -10 dBFS 이상을 1로 정규화합니다.
+    // -60dBFS 이하 0, -10dBFS 이상 1
     const raw = Math.min(1, Math.max(0, (dbfs + 60) / 50));
     const factor = raw > this.smoothed ? 0.35 : 0.08;
     this.smoothed += (raw - this.smoothed) * factor;
@@ -52,14 +49,6 @@ export class AudioMeter {
   async stop() {
     cancelAnimationFrame(this.frameId);
     this.source?.disconnect();
-
-    if (this.context && this.context.state !== "closed") {
-      await this.context.close();
-    }
-
-    this.context = null;
-    this.source = null;
-    this.analyser = null;
-    this.buffer = null;
+    await this.context?.close();
   }
 }
