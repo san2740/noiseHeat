@@ -50,7 +50,7 @@ void main() {
   float distPx = distance(gl_FragCoord.xy, sourcePixel);
 
   // 소리가 커지면 반경도 커집니다.
-  float radius = mix(48.0, 285.0, pow(uNoise, 0.82));
+  float radius = mix(72.0, 285.0, uNoise);
   float pulseSpeed = 2.0 + uNoise * 6.0;
   float pulse = 0.95 + 0.05 * sin(uTime * pulseSpeed);
   radius *= pulse;
@@ -60,7 +60,7 @@ void main() {
   float mask = 1.0 - smoothstep(0.84, 1.0, normalizedDistance);
 
   // 중심은 현재 소리값에 가깝고 바깥으로 갈수록 파란색으로 낮아집니다.
-  float localNoise = clamp(pow(uNoise, 0.72) * pow(radial, 0.72), 0.0, 1.0);
+  float localNoise = clamp(uNoise * pow(radial, 0.72), 0.0, 1.0);
   vec3 color = noiseColor(localNoise);
 
   // 중심부가 영상 위에서 조금 더 또렷하게 보이도록 밝기를 보정합니다.
@@ -80,8 +80,8 @@ void main() {
 
   // 위치 신뢰도가 낮아도 완전히 사라지지는 않되 훨씬 희미하게 표현합니다.
   float confidenceAlpha = mix(0.28, 1.0, uConfidence);
-  float noiseAlpha = smoothstep(0.025, 0.18, uNoise);
-  float alpha = mask * (0.10 + 0.62 * radial) * noiseAlpha * confidenceAlpha;
+  float noiseAlpha = smoothstep(0.035, 0.22, uNoise);
+  float alpha = mask * (0.16 + 0.62 * radial) * noiseAlpha * confidenceAlpha;
 
   gl_FragColor = vec4(color, alpha);
 }

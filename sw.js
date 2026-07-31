@@ -1,4 +1,4 @@
-const CACHE_NAME = "noise-heat-camera-v8-low-sound";
+const CACHE_NAME = "noise-heat-camera-v6";
 const ASSETS = [
   "./",
   "./index.html",

@@ -8,7 +8,7 @@ export class SourceEstimator {
     this.width = options.width ?? 160;
     this.height = options.height ?? 90;
     this.diffThreshold = options.diffThreshold ?? 20;
-    this.minLevel = options.minLevel ?? 0.075;
+    this.minLevel = options.minLevel ?? 0.10;
     this.minMotion = options.minMotion ?? 900;
     this.maxGlobalMotionRatio = options.maxGlobalMotionRatio ?? 0.42;
 

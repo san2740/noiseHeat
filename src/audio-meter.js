@@ -93,11 +93,9 @@ export class AudioMeter {
     const monoRms = this.calculateRms(this.monoBuffer);
     const dbfs = 20 * Math.log10(Math.max(monoRms, 1e-7));
 
-    // 작은 소리까지 표시하도록 범위를 확장합니다.
-    // -82 dBFS 이하 0, -18 dBFS 이상 1이며, 제곱근 곡선으로 저레벨을 확대합니다.
-    const normalizedLevel = Math.min(1, Math.max(0, (dbfs + 82) / 64));
-    const rawLevel = Math.pow(normalizedLevel, 0.58);
-    const levelFactor = rawLevel > this.smoothedLevel ? 0.30 : 0.055;
+    // -60 dBFS 이하 0, -10 dBFS 이상 1
+    const rawLevel = Math.min(1, Math.max(0, (dbfs + 60) / 50));
+    const levelFactor = rawLevel > this.smoothedLevel ? 0.35 : 0.08;
     this.smoothedLevel += (rawLevel - this.smoothedLevel) * levelFactor;
 
     const leftRms = this.calculateRms(this.leftBuffer);
@@ -107,7 +105,7 @@ export class AudioMeter {
     const correlation = this.calculateCorrelation(this.leftBuffer, this.rightBuffer);
 
     // 두 채널이 거의 똑같거나 한쪽 채널이 무음이면 공간 정보로 믿지 않습니다.
-    const levelEnough = this.smoothedLevel > 0.035;
+    const levelEnough = this.smoothedLevel > 0.08;
     const bothChannelsAlive = Math.min(leftRms, rightRms) > 1e-5;
     const differenceEvidence = Math.min(1, Math.abs(rawBalance) / 0.18);
     const decorrelationEvidence = Math.min(1, Math.max(0, (0.9995 - correlation) / 0.08));
