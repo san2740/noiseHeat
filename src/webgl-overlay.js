@@ -70,6 +70,8 @@ void main() {
     float iso = localNoise * uContourCount;
     float phase = fract(iso);
     float edgeDistance = min(phase, 1.0 - phase);
+    // WebGL 1에서는 fwidth()가 기본 지원되지 않는 기기가 있으므로
+    // 고정 폭을 사용합니다. 등고선 개수와 무관하게 안정적으로 컴파일됩니다.
     float width = 0.055;
     float contour = 1.0 - smoothstep(0.0, width, edgeDistance);
     vec3 contourColor = vec3(0.03, 0.03, 0.05);

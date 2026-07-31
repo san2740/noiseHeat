@@ -1,8 +1,8 @@
-const CACHE_NAME = "noise-heat-camera-v3";
+const CACHE_NAME = "noise-heat-camera-v4";
 const ASSETS = [
   "./",
   "./index.html",
-  "./manifest.webmanifest",
+  "./manifest.json",
   "./src/style.css",
   "./src/app.js",
   "./src/audio-meter.js",
