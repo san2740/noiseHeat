@@ -14,58 +14,85 @@ uniform vec2 uSourcePosition;
 uniform float uNoise;
 uniform float uTime;
 
-vec3 heatPalette(float t) {
-  vec3 whiteColor  = vec3(1.00, 1.00, 1.00);
-  vec3 redColor    = vec3(1.00, 0.04, 0.01);
-  vec3 yellowColor = vec3(1.00, 0.78, 0.02);
-  vec3 greenColor  = vec3(0.02, 0.82, 0.20);
-  vec3 cyanColor   = vec3(0.00, 0.76, 1.00);
-  vec3 blueColor   = vec3(0.02, 0.12, 1.00);
+vec3 noiseColor(float t) {
+  vec3 blue   = vec3(0.02, 0.10, 1.00);
+  vec3 cyan   = vec3(0.00, 0.85, 1.00);
+  vec3 green  = vec3(0.00, 0.85, 0.20);
+  vec3 yellow = vec3(1.00, 0.95, 0.00);
+  vec3 orange = vec3(1.00, 0.42, 0.00);
+  vec3 red    = vec3(1.00, 0.00, 0.00);
 
-  if (t < 0.08) {
-    return mix(whiteColor, redColor, t / 0.08);
+  if (t < 0.15) {
+    return mix(blue, cyan, t / 0.15);
   }
-  if (t < 0.30) {
-    return mix(redColor, yellowColor, (t - 0.08) / 0.22);
+
+  if (t < 0.35) {
+    return mix(cyan, green, (t - 0.15) / 0.20);
   }
-  if (t < 0.52) {
-    return mix(yellowColor, greenColor, (t - 0.30) / 0.22);
+
+  if (t < 0.60) {
+    return mix(green, yellow, (t - 0.35) / 0.25);
   }
-  if (t < 0.74) {
-    return mix(greenColor, cyanColor, (t - 0.52) / 0.22);
+
+  if (t < 0.80) {
+    return mix(yellow, orange, (t - 0.60) / 0.20);
   }
-  return mix(cyanColor, blueColor, (t - 0.74) / 0.26);
+
+  return mix(orange, red, (t - 0.80) / 0.20);
 }
 
 void main() {
-  // gl_FragCoord의 Y축은 아래에서 위로 증가합니다.
-  vec2 source = vec2(
+  vec2 pixel = gl_FragCoord.xy;
+
+  // 입력 좌표는 CSS 좌표계(왼쪽 위 원점), gl_FragCoord는 왼쪽 아래 원점
+  vec2 sourcePixel = vec2(
     uSourcePosition.x,
     uResolution.y - uSourcePosition.y
   );
 
-  float distancePx = distance(gl_FragCoord.xy, source);
+  float distPx = distance(pixel, sourcePixel);
 
-  // 음량이 커질수록 히트맵 반경과 밝기가 증가합니다.
-  float baseRadius = mix(70.0, 250.0, uNoise);
-  float pulseSpeed = 2.0 + uNoise * 7.0;
+  // 소리 클수록 반경 커짐
+  float radius = mix(70.0, 260.0, uNoise);
+
+  // 약간 맥동
+  float pulseSpeed = 2.0 + uNoise * 6.0;
   float pulse = 0.94 + 0.06 * sin(uTime * pulseSpeed);
-  float radius = baseRadius * pulse;
+  radius *= pulse;
 
-  float normalizedDistance = distancePx / radius;
-  float t = clamp(normalizedDistance, 0.0, 1.0);
-  vec3 color = heatPalette(t);
+  // 중심 = 1, 바깥 = 0
+  float radial = 1.0 - smoothstep(0.0, radius, distPx);
 
-  // 바깥 테두리를 부드럽게 투명하게 만듭니다.
-  float circleMask = 1.0 - smoothstep(0.84, 1.0, normalizedDistance);
+  // 가장자리 부드럽게 끊기
+  float circleMask = 1.0 - smoothstep(radius * 0.92, radius, distPx);
 
-  // 중앙부를 강조하고, 낮은 음량에서는 전체 투명도를 낮춥니다.
-  float centerGlow = 1.0 - smoothstep(0.0, 0.65, normalizedDistance);
-  float noiseVisibility = smoothstep(0.025, 0.16, uNoise);
-  float alpha = circleMask
-              * noiseVisibility
-              * (0.20 + 0.58 * uNoise)
-              * (0.62 + 0.38 * centerGlow);
+  // 핵심:
+  // 현재 소리값(uNoise)에 거리 감쇠(radial)를 곱해서
+  // 각 픽셀의 체감 소음값을 만든다.
+  float localNoise = clamp(uNoise * radial, 0.0, 1.0);
+
+  vec3 color = noiseColor(localNoise);
+
+  // 중심이 너무 허옇지 않게, 대신 더 밝게 보이도록 약간 증폭
+  float brightness = 0.75 + 0.35 * radial;
+  color *= brightness;
+
+  // 등고선 비슷한 줄무늬를 넣고 싶으면 유지
+  float contourCount = 8.0;
+  float contourStrength = 0.18;
+
+  if (uNoise > 0.01) {
+    float iso = localNoise * contourCount;
+    float phase = fract(iso);
+    float edgeDistance = min(phase, 1.0 - phase);
+    float width = max(fwidth(iso) * 1.5, 0.004);
+    float contour = 1.0 - smoothstep(0.0, width, edgeDistance);
+
+    vec3 contourColor = vec3(0.03, 0.03, 0.05);
+    color = mix(color, contourColor, contour * contourStrength);
+  }
+
+  float alpha = circleMask * (0.12 + 0.72 * radial) * (0.25 + 0.75 * uNoise);
 
   gl_FragColor = vec4(color, alpha);
 }
@@ -84,29 +111,18 @@ export class WebGLOverlay {
 
     this.noise = 0;
     this.displayedNoise = 0;
-    this.sourceX = window.innerWidth * 0.5;
-    this.sourceY = window.innerHeight * 0.42;
     this.startTime = performance.now();
 
-    this.program = this.createProgram(
-      vertexShaderSource,
-      fragmentShaderSource
-    );
+    this.sourceX = window.innerWidth * 0.5;
+    this.sourceY = window.innerHeight * 0.5;
 
-    this.positionLocation = this.gl.getAttribLocation(
-      this.program,
-      "aPosition"
-    );
+    this.program = this.createProgram(vertexShaderSource, fragmentShaderSource);
+
+    this.positionLocation = this.gl.getAttribLocation(this.program, "aPosition");
     this.noiseLocation = this.gl.getUniformLocation(this.program, "uNoise");
     this.timeLocation = this.gl.getUniformLocation(this.program, "uTime");
-    this.resolutionLocation = this.gl.getUniformLocation(
-      this.program,
-      "uResolution"
-    );
-    this.sourcePositionLocation = this.gl.getUniformLocation(
-      this.program,
-      "uSourcePosition"
-    );
+    this.resolutionLocation = this.gl.getUniformLocation(this.program, "uResolution");
+    this.sourcePositionLocation = this.gl.getUniformLocation(this.program, "uSourcePosition");
 
     const vertices = new Float32Array([
       -1, -1,
@@ -117,17 +133,10 @@ export class WebGLOverlay {
 
     this.buffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
-    this.gl.bufferData(
-      this.gl.ARRAY_BUFFER,
-      vertices,
-      this.gl.STATIC_DRAW
-    );
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, vertices, this.gl.STATIC_DRAW);
 
     this.gl.enable(this.gl.BLEND);
-    this.gl.blendFunc(
-      this.gl.SRC_ALPHA,
-      this.gl.ONE_MINUS_SRC_ALPHA
-    );
+    this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
 
     window.addEventListener("resize", this.resize);
     this.resize();
@@ -139,8 +148,8 @@ export class WebGLOverlay {
   }
 
   setSourcePosition(x, y) {
-    this.sourceX = Math.min(window.innerWidth, Math.max(0, x));
-    this.sourceY = Math.min(window.innerHeight, Math.max(0, y));
+    this.sourceX = x;
+    this.sourceY = y;
   }
 
   resize = () => {
@@ -167,22 +176,11 @@ export class WebGLOverlay {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
     gl.enableVertexAttribArray(this.positionLocation);
-    gl.vertexAttribPointer(
-      this.positionLocation,
-      2,
-      gl.FLOAT,
-      false,
-      0,
-      0
-    );
+    gl.vertexAttribPointer(this.positionLocation, 2, gl.FLOAT, false, 0, 0);
 
     gl.uniform1f(this.noiseLocation, this.displayedNoise);
-    gl.uniform1f(this.timeLocation, (now - this.startTime) / 1000);
-    gl.uniform2f(
-      this.resolutionLocation,
-      this.canvas.width,
-      this.canvas.height
-    );
+    gl.uniform1f(this.timeLocation, (now - this.startTime) / 1000.0);
+    gl.uniform2f(this.resolutionLocation, this.canvas.width, this.canvas.height);
     gl.uniform2f(
       this.sourcePositionLocation,
       this.sourceX * dpr,
@@ -201,21 +199,14 @@ export class WebGLOverlay {
     if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
       const message = this.gl.getShaderInfoLog(shader);
       this.gl.deleteShader(shader);
-      throw new Error(`셰이더 컴파일 실패: ${message}`);
+      throw new Error(\`셰이더 컴파일 실패: \${message}\`);
     }
-
     return shader;
   }
 
   createProgram(vertexSource, fragmentSource) {
-    const vertex = this.createShader(
-      this.gl.VERTEX_SHADER,
-      vertexSource
-    );
-    const fragment = this.createShader(
-      this.gl.FRAGMENT_SHADER,
-      fragmentSource
-    );
+    const vertex = this.createShader(this.gl.VERTEX_SHADER, vertexSource);
+    const fragment = this.createShader(this.gl.FRAGMENT_SHADER, fragmentSource);
     const program = this.gl.createProgram();
 
     this.gl.attachShader(program, vertex);
@@ -224,12 +215,12 @@ export class WebGLOverlay {
 
     if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
       const message = this.gl.getProgramInfoLog(program);
-      this.gl.deleteProgram(program);
-      throw new Error(`WebGL 프로그램 연결 실패: ${message}`);
+      throw new Error(\`WebGL 프로그램 연결 실패: \${message}\`);
     }
 
     this.gl.deleteShader(vertex);
     this.gl.deleteShader(fragment);
+
     return program;
   }
 }
