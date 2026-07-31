@@ -1,6 +1,6 @@
 /**
- * 카메라 프레임의 국소 움직임을 이용해 "소리가 났을 가능성이 있는 화면 위치"를 추정
- * 실제 음향 방향 측정이 아니라 영상 움직임과 소리 발생 시점을 결합한 휴리스틱임
+ * 카메라 프레임의 국소 움직임을 이용해 "소리가 났을 가능성이 있는 화면 위치"를 추정합니다.
+ * 실제 음향 방향 측정이 아니라 영상 움직임과 소리 발생 시점을 결합한 휴리스틱입니다.
  */
 export class SourceEstimator {
   constructor(video, options = {}) {
@@ -8,7 +8,7 @@ export class SourceEstimator {
     this.width = options.width ?? 160;
     this.height = options.height ?? 90;
     this.diffThreshold = options.diffThreshold ?? 20;
-    this.minLevel = options.minLevel ?? 0.10;
+    this.minLevel = options.minLevel ?? 0.045;
     this.minMotion = options.minMotion ?? 900;
     this.maxGlobalMotionRatio = options.maxGlobalMotionRatio ?? 0.42;
 
@@ -74,7 +74,7 @@ export class SourceEstimator {
     let activePixels = 0;
     let totalDiff = 0;
 
-    // 가장자리 2픽셀은 카메라 리사이즈/보간 노이즈를 줄이기 위해 제외
+    // 가장자리 2픽셀은 카메라 리사이즈/보간 노이즈를 줄이기 위해 제외합니다.
     for (let y = 2; y < this.height - 2; y++) {
       for (let x = 2; x < this.width - 2; x++) {
         const index = y * this.width + x;
@@ -98,7 +98,7 @@ export class SourceEstimator {
     const activeRatio = activePixels / validPixelCount;
     const averageDiff = totalDiff / validPixelCount;
 
-    // 카메라 전체가 흔들리거나 이동하면 특정 음원 위치라고 보기 어렵다
+    // 카메라 전체가 흔들리거나 이동하면 특정 음원 위치라고 보기 어렵습니다.
     const looksGlobal =
       activeRatio > this.maxGlobalMotionRatio ||
       averageDiff > 24;
@@ -116,7 +116,7 @@ export class SourceEstimator {
     const frameY = weightedY / weightSum;
     const screenPoint = this.frameToScreen(frameX, frameY);
 
-    // 소리가 클수록 새 위치를 조금 빠르게 따라감
+    // 소리가 클수록 새 위치를 조금 빠르게 따라갑니다.
     const follow = 0.16 + level * 0.24;
     this.lastX += (screenPoint.x - this.lastX) * follow;
     this.lastY += (screenPoint.y - this.lastY) * follow;
@@ -130,7 +130,7 @@ export class SourceEstimator {
   }
 
   /**
-   * 분석 캔버스 좌표를 object-fit: cover가 적용된 화면 좌표로 변환
+   * 분석 캔버스 좌표를 object-fit: cover가 적용된 화면 좌표로 변환합니다.
    */
   frameToScreen(frameX, frameY) {
     const screenWidth = window.innerWidth;

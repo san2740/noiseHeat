@@ -35,12 +35,14 @@ export class AudioMeter {
     const audioTrack = this.stream.getAudioTracks()[0];
     this.reportedChannelCount = audioTrack?.getSettings?.().channelCount || 1;
 
+    // 전체 음량은 항상 모노 분석기로 측정합니다.
     this.monoAnalyser = this.context.createAnalyser();
     this.monoAnalyser.fftSize = 2048;
     this.monoAnalyser.smoothingTimeConstant = 0;
     this.source.connect(this.monoAnalyser);
     this.monoBuffer = new Float32Array(this.monoAnalyser.fftSize);
 
+    // 2채널을 요청했더라도 실제로 독립적인 공간 채널인지 런타임에서 검증합니다.
     this.splitter = this.context.createChannelSplitter(2);
     this.leftAnalyser = this.context.createAnalyser();
     this.rightAnalyser = this.context.createAnalyser();
@@ -91,9 +93,11 @@ export class AudioMeter {
     const monoRms = this.calculateRms(this.monoBuffer);
     const dbfs = 20 * Math.log10(Math.max(monoRms, 1e-7));
 
-    // -60 dBFS 이하 0, -10 dBFS 이상 1
-    const rawLevel = Math.min(1, Math.max(0, (dbfs + 60) / 50));
-    const levelFactor = rawLevel > this.smoothedLevel ? 0.35 : 0.08;
+    // 작은 소리까지 표시하도록 범위를 확장합니다.
+    // -82 dBFS 이하 0, -18 dBFS 이상 1이며, 제곱근 곡선으로 저레벨을 확대합니다.
+    const normalizedLevel = Math.min(1, Math.max(0, (dbfs + 82) / 64));
+    const rawLevel = Math.pow(normalizedLevel, 0.58);
+    const levelFactor = rawLevel > this.smoothedLevel ? 0.30 : 0.055;
     this.smoothedLevel += (rawLevel - this.smoothedLevel) * levelFactor;
 
     const leftRms = this.calculateRms(this.leftBuffer);
@@ -102,7 +106,8 @@ export class AudioMeter {
     const rawBalance = (rightRms - leftRms) / (channelEnergy + 1e-8);
     const correlation = this.calculateCorrelation(this.leftBuffer, this.rightBuffer);
 
-    const levelEnough = this.smoothedLevel > 0.08;
+    // 두 채널이 거의 똑같거나 한쪽 채널이 무음이면 공간 정보로 믿지 않습니다.
+    const levelEnough = this.smoothedLevel > 0.035;
     const bothChannelsAlive = Math.min(leftRms, rightRms) > 1e-5;
     const differenceEvidence = Math.min(1, Math.abs(rawBalance) / 0.18);
     const decorrelationEvidence = Math.min(1, Math.max(0, (0.9995 - correlation) / 0.08));

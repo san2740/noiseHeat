@@ -41,7 +41,7 @@ vec3 noiseColor(float t) {
 }
 
 void main() {
-  // gl_FragCoord는 왼쪽 아래 원점, JS 좌표는 왼쪽 위 원점
+  // gl_FragCoord는 왼쪽 아래 원점, JS 좌표는 왼쪽 위 원점입니다.
   vec2 sourcePixel = vec2(
     uSourcePosition.x,
     uResolution.y - uSourcePosition.y
@@ -49,8 +49,8 @@ void main() {
 
   float distPx = distance(gl_FragCoord.xy, sourcePixel);
 
-  // 소리가 커지면 반경도 커짐
-  float radius = mix(72.0, 285.0, uNoise);
+  // 소리가 커지면 반경도 커집니다.
+  float radius = mix(58.0, 285.0, pow(uNoise, 0.72));
   float pulseSpeed = 2.0 + uNoise * 6.0;
   float pulse = 0.95 + 0.05 * sin(uTime * pulseSpeed);
   radius *= pulse;
@@ -59,28 +59,29 @@ void main() {
   float radial = 1.0 - smoothstep(0.0, 1.0, normalizedDistance);
   float mask = 1.0 - smoothstep(0.84, 1.0, normalizedDistance);
 
-  // 중심은 현재 소리값에 가깝고 바깥으로 갈수록 파란색으로 낮아짐
-  float localNoise = clamp(uNoise * pow(radial, 0.72), 0.0, 1.0);
+  // 중심은 현재 소리값에 가깝고 바깥으로 갈수록 파란색으로 낮아집니다.
+  float localNoise = clamp(pow(uNoise, 0.72) * pow(radial, 0.72), 0.0, 1.0);
   vec3 color = noiseColor(localNoise);
 
-  // 중심부가 영상 위에서 조금 더 또렷하게 보이도록 밝기를 보정
+  // 중심부가 영상 위에서 조금 더 또렷하게 보이도록 밝기를 보정합니다.
   color *= 0.82 + radial * 0.32;
 
   if (uContourCount > 0.0 && uContourStrength > 0.0) {
     float iso = localNoise * uContourCount;
     float phase = fract(iso);
     float edgeDistance = min(phase, 1.0 - phase);
-  
+    // WebGL 1에서는 fwidth()가 기본 지원되지 않는 기기가 있으므로
+    // 고정 폭을 사용합니다. 등고선 개수와 무관하게 안정적으로 컴파일됩니다.
     float width = 0.055;
     float contour = 1.0 - smoothstep(0.0, width, edgeDistance);
     vec3 contourColor = vec3(0.03, 0.03, 0.05);
     color = mix(color, contourColor, contour * uContourStrength);
   }
 
-  // 위치 신뢰도가 낮아도 완전히 사라지지는 않되 훨씬 희미하게 표현
+  // 위치 신뢰도가 낮아도 완전히 사라지지는 않되 훨씬 희미하게 표현합니다.
   float confidenceAlpha = mix(0.28, 1.0, uConfidence);
-  float noiseAlpha = smoothstep(0.035, 0.22, uNoise);
-  float alpha = mask * (0.16 + 0.62 * radial) * noiseAlpha * confidenceAlpha;
+  float noiseAlpha = smoothstep(0.004, 0.12, uNoise);
+  float alpha = mask * (0.12 + 0.66 * radial) * noiseAlpha * confidenceAlpha;
 
   gl_FragColor = vec4(color, alpha);
 }
