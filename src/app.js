@@ -67,11 +67,9 @@ function startEstimator() {
     let sourceLabel = "위치 불명";
 
     if (stereoUsable) {
-      // 좌우 음향 정보는 X축에 반영합니다. 과도한 끝단 이동을 막기 위해 12~88%로 제한합니다.
       const audioX = window.innerWidth * (0.5 + latestAudio.balance * 0.38);
       x = clamp(audioX, window.innerWidth * 0.12, window.innerWidth * 0.88);
 
-      // Y축은 음향 2채널만으로 알 수 없으므로 움직임이 있으면 그 값을 사용합니다.
       y = motionUsable ? motion.y : window.innerHeight * 0.5;
 
       confidence = clamp(
