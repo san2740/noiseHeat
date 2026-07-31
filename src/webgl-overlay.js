@@ -70,7 +70,7 @@ void main() {
     float iso = localNoise * uContourCount;
     float phase = fract(iso);
     float edgeDistance = min(phase, 1.0 - phase);
-    float width = max(fwidth(iso) * 1.6, 0.0035);
+    float width = 0.055;
     float contour = 1.0 - smoothstep(0.0, width, edgeDistance);
     vec3 contourColor = vec3(0.03, 0.03, 0.05);
     color = mix(color, contourColor, contour * uContourStrength);
