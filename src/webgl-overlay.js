@@ -50,7 +50,7 @@ void main() {
   float distPx = distance(gl_FragCoord.xy, sourcePixel);
 
   // 소리가 커지면 반경도 커집니다.
-  float radius = mix(58.0, 285.0, pow(uNoise, 0.72));
+  float radius = mix(48.0, 285.0, pow(uNoise, 0.82));
   float pulseSpeed = 2.0 + uNoise * 6.0;
   float pulse = 0.95 + 0.05 * sin(uTime * pulseSpeed);
   radius *= pulse;
@@ -80,8 +80,8 @@ void main() {
 
   // 위치 신뢰도가 낮아도 완전히 사라지지는 않되 훨씬 희미하게 표현합니다.
   float confidenceAlpha = mix(0.28, 1.0, uConfidence);
-  float noiseAlpha = smoothstep(0.004, 0.12, uNoise);
-  float alpha = mask * (0.12 + 0.66 * radial) * noiseAlpha * confidenceAlpha;
+  float noiseAlpha = smoothstep(0.025, 0.18, uNoise);
+  float alpha = mask * (0.10 + 0.62 * radial) * noiseAlpha * confidenceAlpha;
 
   gl_FragColor = vec4(color, alpha);
 }

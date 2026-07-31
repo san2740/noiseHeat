@@ -160,9 +160,9 @@ async function startMedia() {
     levelText.textContent = `소음 강도 ${percent}%`;
     meterFill.style.width = `${percent}%`;
     status.textContent =
-      percent < 12 ? "매우 조용함" :
-      percent < 30 ? "작은 소리" :
-      percent < 65 ? "보통" : "시끄러움";
+      percent < 8 ? "정숙" :
+      percent < 28 ? "작은 소리" :
+      percent < 62 ? "보통" : "시끄러움";
   });
 
   await meter.start();
